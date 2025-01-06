@@ -1,0 +1,28 @@
+# Преобразование символов в бинарный код
+def text_to_binary(text):
+    return ' '.join(format(ord(char), '08b') for char in text)
+
+# Преобразование бинарного кода в Морзу
+def binary_to_morse(binary_code):
+    morse_dict = {
+        '0': '.',
+        '1': '-'
+    }
+    return ' '.join(morse_dict[bit] for bit in binary_code.replace(' ', ''))
+
+# Преобразование Морзы в бинарный код
+def morse_to_binary(morse_code):
+    morse_dict = {'.': '0', '-': '1'}
+    return ''.join(morse_dict[char] for char in morse_code.split())
+
+# Преобразование бинарного кода обратно в текст
+def binary_to_text(binary_code):
+    return ''.join(chr(int(b, 2)) for b in binary_code.split(' '))
+
+# Пример использования
+text = "Привет!"
+binary_code = text_to_binary(text)
+morse_code = binary_to_morse(binary_code)
+print(f"Текст: {text}")
+print(f"Бинарный код: {binary_code}")
+print(f"Азбука Морза: {morse_code}")
