@@ -1,0 +1,171 @@
+extends Node
+
+class_name BaseArrayManager
+
+# Основной массив, управляющий состоянием
+var grid = []
+
+# Массивы для управления состояниями
+var live_indices = []  # Индексы живых ячеек
+var conflict_indices = {}  # Конфликты: индекс -> количество обращений
+
+# Инициализация массива с заданным размером и значением по умолчанию
+func initialize(size, default_value = false):
+	grid.resize(size)
+	for i in range(size):
+		grid[i] = default_value
+
+# Изменение размера массива (для двумерных массивов используется rows * columns)
+func resize_array(rows, columns, default_value = false):
+	var new_size = rows * columns
+	grid.resize(new_size)
+	for i in range(grid.size()):
+		if grid[i] == null:
+			grid[i] = default_value
+
+# Обновление значения в указанной ячейке
+func update_cell(index, value):
+	if index >= 0 and index < grid.size():
+		grid[index] = value
+
+# Проверка, заполнена ли ячейка
+func is_cell_filled(index):
+	if index >= 0 and index < grid.size():
+		return grid[index]
+	return false
+
+# Очистка всего массива
+func clear():
+	for i in range(grid.size()):
+		grid[i] = false
+
+# Добавление индекса в массив живых ячеек
+func add_live_index(index):
+	if index not in live_indices:
+		live_indices.append(index)
+
+# Удаление индекса из массива живых ячеек
+func remove_live_index(index):
+	if index in live_indices:
+		live_indices.erase(index)
+
+# Обработка обращения к индексу
+func handle_index_interaction(index):
+	if index in live_indices:
+		# Обнаружен конфликт, увеличиваем счетчик
+		if not conflict_indices.has(index):
+			conflict_indices[index] = 1
+		conflict_indices[index] += 1
+	else:
+		# Индекс становится живым
+		add_live_index(index)
+
+# Обновление логики по таймеру
+func update_logic():
+	for index in live_indices:
+		if is_cell_filled(index):
+			handle_index_interaction(index)
+		else:
+			remove_live_index(index)
+
+	# Выводим конфликты для анализа
+	print("Конфликты:", conflict_indices)
+
+	# Очистка конфликтов после обработки
+	conflict_indices.clear()
+
+# Преобразование n-мерных координат в одномерный индекс
+func to_index(coords, dimensions):
+	var index = 0
+	var stride = 1
+	for i in range(coords.size() - 1, -1, -1):
+		index += coords[i] * stride
+		stride *= dimensions[i]
+	return index
+
+# Преобразование одномерного индекса в n-мерные координаты
+func from_index(index, dimensions):
+	var coords = []
+	for i in range(dimensions.size() - 1, -1, -1):
+		coords.insert(0, index % dimensions[i])
+		index = index / dimensions[i]
+	return coords
+
+# Создание пустого n-мерного массива заданных размеров
+func create_empty_array(dimensions):
+	if dimensions.size() == 0:
+		return []
+	var result = []
+	for i in range(dimensions[0]):
+		result.append(create_empty_array(dimensions.slice(1)))
+	return result
+
+# Генерация всех координат для n-мерного массива
+func generate_coords(dimensions):
+	if dimensions.size() == 0:
+		return []
+
+	var coords = [[]]
+	for dim in dimensions:
+		var new_coords = []
+		for coord in coords:
+			for i in range(dim):
+				new_coords.append(coord + [i])
+		coords = new_coords
+	return coords
+
+# Генерация текстовой таблицы из одномерного массива
+func generate_table(rows, columns):
+	if grid.empty():
+		return "Ошибка: массив grid не инициализирован."
+
+	var table = ""
+	for row in range(rows):
+		var line = ""
+		for column in range(columns):
+			var index = row * columns + column
+			line += str(grid[index]) + " "
+		table += line.strip_edges() + "\n"
+	return table
+
+# Получение возможных ходов для любой фигуры
+func get_possible_moves(piece_type, position, rows, columns):
+	if piece_type == "king":
+		return get_king_moves(position, rows, columns)
+	# Добавьте другие типы фигур (например, "queen", "bishop", и т.д.)
+	return []
+
+# Получение возможных ходов короля
+func get_king_moves(position, rows, columns):
+	var moves = []
+	var x = position % columns
+	var y = position / columns
+
+	# Соседние клетки (включая диагонали)
+	var directions = [
+		Vector2(-1, -1), Vector2(0, -1), Vector2(1, -1),
+		Vector2(-1,  0),                Vector2(1,  0),
+		Vector2(-1,  1), Vector2(0,  1), Vector2(1,  1)
+	]
+
+	for direction in directions:
+		var new_x = x + direction.x
+		var new_y = y + direction.y
+
+		# Проверка границ поля
+		if new_x >= 0 and new_x < columns and new_y >= 0 and new_y < rows:
+			var new_position = int(new_y) * columns + int(new_x)
+			moves.append(new_position)
+
+	return moves
+
+# Перемещение фигуры
+func move_piece(piece_type, current_position, new_position, rows, columns):
+	if current_position >= 0 and current_position < grid.size() and new_position >= 0 and new_position < grid.size():
+		if new_position in get_possible_moves(piece_type, current_position, rows, columns):
+			update_cell(current_position, false)  # Убираем фигуру с текущей позиции
+			update_cell(new_position, true)       # Устанавливаем фигуру на новой позиции
+		else:
+			print("Ошибка: выбранное перемещение недопустимо.")
+	else:
+		print("Ошибка: индексы выходят за пределы массива.")

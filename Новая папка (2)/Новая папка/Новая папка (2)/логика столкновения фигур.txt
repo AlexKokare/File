@@ -1,0 +1,96 @@
+extends Object
+class_name EventHandler
+
+# Обработчик события
+func process_event(all_pieces: Array, involved_pieces: Array):
+    var attackers = involved_pieces.filter((piece) -> piece is Attacker)
+    var defenders = involved_pieces.filter((piece) -> piece is Defender)
+
+    # Обработка взаимодействий
+    for attacker in attackers:
+        for defender in defenders:
+            if attacker.index == defender.index:
+                process_attack(attacker, defender)
+            elif attacker.index.distance_to(defender.index) == 1:
+                process_nearby_interaction(attacker, defender)
+
+    # Обработка столкновений между однотипными фигурами
+    for i in range(attackers.size()):
+        for j in range(i + 1, attackers.size()):
+            process_attack_between_attackers(attackers[i], attackers[j])
+
+    for i in range(defenders.size()):
+        for j in range(i + 1, defenders.size()):
+            process_defender_vs_defender(defenders[i], defenders[j])
+
+# Обработка атаки на клетке защитника
+func process_attack(attacker: Attacker, defender: Defender):
+    var original_positions = save_positions([attacker, defender])
+
+    defender.take_damage(attacker.attack_power)
+    print("Defender took damage:", attacker.attack_power)
+
+    if defender.is_alive():
+        attacker.take_damage(defender.attack_power)
+        print("Attacker took counter damage:", defender.attack_power)
+
+        if attacker.is_alive():
+            restore_positions(original_positions)
+        else:
+            print("Attacker died after counterattack.")
+    else:
+        attacker.move_to(defender.index)
+        print("Defender defeated. Attacker moved to:", defender.index)
+
+# Обработка взаимодействия на соседних клетках
+func process_nearby_interaction(attacker: Attacker, defender: Defender):
+    var original_positions = save_positions([attacker, defender])
+
+    attacker.take_damage(defender.attack_power)
+    print("Nearby interaction: Attacker took damage:", defender.attack_power)
+
+    if attacker.is_alive():
+        restore_positions(original_positions)
+    else:
+        print("Attacker died in nearby interaction.")
+
+# Обработка столкновения двух нападающих
+func process_attack_between_attackers(attacker1: Attacker, attacker2: Attacker):
+    attacker1.take_damage(attacker2.attack_power)
+    attacker2.take_damage(attacker1.attack_power)
+    print("Both attackers took damage.")
+
+    if not attacker1.is_alive():
+        print("Attacker1 died.")
+    if not attacker2.is_alive():
+        print("Attacker2 died.")
+
+# Обработка столкновения двух защитников
+func process_defender_vs_defender(defender1: Defender, defender2: Defender):
+    if defender1.attack_power > defender2.attack_power:
+        defender2.take_damage(defender1.attack_power - defender2.attack_power)
+        print("Defender2 took damage from Defender1.")
+    elif defender2.attack_power > defender1.attack_power:
+        defender1.take_damage(defender2.attack_power - defender1.attack_power)
+        print("Defender1 took damage from Defender2.")
+    else:
+        print("No damage. Both defenders have equal attack power.")
+
+# Сохранение оригинальных позиций
+func save_positions(pieces: Array) -> Dictionary:
+    var positions = {}
+    for piece in pieces:
+        positions[piece] = piece.index
+    return positions
+
+# Восстановление позиций
+func restore_positions(positions: Dictionary):
+    for piece in positions.keys():
+        piece.index = positions[piece]
+
+# Добавление дополнительных взаимодействий
+func process_mixed_interactions(all_pieces: Array):
+    for piece in all_pieces:
+        if piece.is_reflective():
+            print("Piece", piece, "has a reflective ability.")
+            # Добавьте соответствующую логику для отражения

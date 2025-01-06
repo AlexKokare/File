@@ -1,0 +1,41 @@
+extends Object
+class_name BitArray
+
+var byte_array: PoolByteArray
+var size: int
+
+# Конструктор
+func _init(bits: int):
+    size = bits
+    byte_array = PoolByteArray()
+    byte_array.resize((bits + 7) // 8)  # Округляем вверх до полного количества байтов
+
+# Установить значение бита
+func set_bit(index: int, value: bool):
+    if index < 0 or index >= size:
+        push_error("Index out of bounds")
+        return
+    var byte_index = index // 8
+    var bit_index = index % 8
+    if value:
+        byte_array[byte_index] |= (1 << bit_index)  # Устанавливаем бит
+    else:
+        byte_array[byte_index] &= ~(1 << bit_index)  # Сбрасываем бит
+
+# Получить значение бита
+func get_bit(index: int) -> bool:
+    if index < 0 or index >= size:
+        push_error("Index out of bounds")
+        return false
+    var byte_index = index // 8
+    var bit_index = index % 8
+    return (byte_array[byte_index] & (1 << bit_index)) != 0
+
+# Пример использования
+func _ready():
+    var bits = BitArray.new(16)  # Создаем массив на 16 бит
+    bits.set_bit(0, true)       # Устанавливаем первый бит
+    bits.set_bit(15, true)      # Устанавливаем последний бит
+    print(bits.get_bit(0))      # Выведет true
+    print(bits.get_bit(15))     # Выведет true
+    print(bits.get_bit(1))      # Выведет false

@@ -1,0 +1,43 @@
+Подзадача 2: Преобразование одномерного массива в двумерный
+Теперь давай создадим функцию, которая будет преобразовывать одномерный массив в двумерный, используя формулу index = row * M + column.
+
+
+func convert_to_2d_array(original_array: Array, rows: int, columns: int) -> Array:
+    var two_d_array = []
+    for row in range(rows):
+        var new_row = []
+        for column in range(columns):
+            var index = row * columns + column
+            if index < original_array.size():
+                new_row.append(original_array[index])
+            else:
+                new_row.append(0)  # Заполняем нулями, если индекс выходит за пределы
+        two_d_array.append(new_row)
+    return two_d_array
+
+
+Функция convert_to_2d_array принимает одномерный массив и размеры для двумерного массива.
+Она создает новый двумерный массив, заполняя его значениями из одномерного массива по формуле.
+
+--------------------------------------------------------------
+
+
+Преобразование одномерного массива в двумерный
+Теперь давай создадим функцию, которая будет преобразовывать одномерный массив в двумерный, используя формулу index = row * M + column.
+
+
+
+func convert_to_2d_array(rows: int, columns: int) -> Array:
+    var two_d_array = []
+    for row in range(rows):
+        var current_row = []
+        for column in range(columns):
+            var index = row * columns + column
+            if index < index_array.size():
+                current_row.append(index_array[index])
+        two_d_array.append(current_row)
+    return two_d_array
+
+
+Функция convert_to_2d_array() принимает количество строк и столбцов.
+Она создает двумерный массив, заполняя его значениями из index_array по формуле.

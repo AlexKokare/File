@@ -1,0 +1,123 @@
+# game_logic_with_menu.gd
+extends Node
+
+# Хардкодинг логики игры и меню в одном скрипте
+
+# Меню
+var menu_items = ["Start Game", "Options", "Exit"]
+var selected_index = 0
+
+func _ready():
+    print("--- Initializing Game and Menu ---")
+    show_menu()
+
+# Показать меню
+func show_menu():
+    print("--- Main Menu ---")
+    for i in range(menu_items.size()):
+        if i == selected_index:
+            print("->", menu_items[i])
+        else:
+            print("  ", menu_items[i])
+
+# Обработка ввода для меню
+func _input(event):
+    if event is InputEventKey:
+        if event.pressed:
+            if event.scancode == KEY_UP:
+                selected_index = max(selected_index - 1, 0)
+                show_menu()
+            elif event.scancode == KEY_DOWN:
+                selected_index = min(selected_index + 1, menu_items.size() - 1)
+                show_menu()
+            elif event.scancode == KEY_ENTER:
+                handle_menu_selection()
+
+# Обработка выбора в меню
+func handle_menu_selection():
+    match menu_items[selected_index]:
+        "Start Game":
+            start_game()
+        "Options":
+            show_options()
+        "Exit":
+            get_tree().quit()
+
+# Начало игры
+func start_game():
+    print("--- Starting Game ---")
+    var tilemap = TileMap.new()
+    tilemap.cell_size = Vector2(64, 64)
+    add_child(tilemap)
+    draw_field(tilemap)
+
+    # Создаем атакующего
+    var attacker = create_attacker(Vector2(0, 0), 50)
+    add_child(attacker)
+
+    # Создаем защитников
+    var defender1 = create_defender(Vector2(0, 1), 30)
+    add_child(defender1)
+
+    var defender2 = create_defender(Vector2(0, 2), 40)
+    add_child(defender2)
+
+    # Логика взаимодействия
+    process_event(attacker, defender1)
+    process_line_attack(attacker, [defender1, defender2], tilemap)
+
+# Показать настройки
+func show_options():
+    print("--- Options Menu ---")
+    print("Feature coming soon!")
+
+# Отрисовка игрового поля
+func draw_field(tilemap):
+    for y in range(5):
+        for x in range(5):
+            tilemap.set_cell(x, y, 0)
+
+# Подсветка клетки
+func highlight_cell(tilemap, position):
+    tilemap.set_cellv(position, 1)  # Меняем тайл для подсветки
+    print("Highlighted cell at:", position)
+
+# Перемещение фигуры
+func move_piece(piece, new_position):
+    piece.position = new_position * 64
+    print("Moved piece to:", new_position)
+
+# Создание атакующего
+func create_attacker(position: Vector2, attack_power: int):
+    var attacker = Sprite.new()
+    attacker.texture = preload("res://attacker.png")
+    attacker.position = position * 64
+    attacker.health = 100
+    attacker.attack_power = attack_power
+    return attacker
+
+# Создание защитника
+func create_defender(position: Vector2, defense_power: int):
+    var defender = Sprite.new()
+    defender.texture = preload("res://defender.png")
+    defender.position = position * 64
+    defender.health = 100
+    defender.defense_power = defense_power
+    return defender
+
+# Обработка взаимодействия между атакующим и защитником
+func process_event(attacker, defender):
+    defender.health -= attacker.attack_power
+    if defender.health > 0:
+        attacker.health -= defender.defense_power
+
+# Обработка линейной атаки
+func process_line_attack(attacker, defenders, tilemap):
+    for defender in defenders:
+        if tilemap.get_cellv(defender.position / 64) == 0:
+            defender.health -= attacker.attack_power
+            if defender.health <= 0:
+                print("Defender defeated at position:", defender.position)
+                break
+            else:
+                print("Defender survived at position:", defender.position)
