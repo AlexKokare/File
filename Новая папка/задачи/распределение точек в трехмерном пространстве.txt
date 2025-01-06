@@ -1,0 +1,42 @@
+Подзадача 3: Распределение точек в трехмерном пространстве
+Теперь перейдем к распределению точек в трехмерном пространстве. Для равномерного распределения точек на плоскости можно использовать сферическую координатную систему. Вот пример кода:
+
+func distribute_points_on_plane(num_points: int, radius: float) -> Array:
+    var points = []
+    for i in range(num_points):
+        var theta = randf() * PI * 2  # Угол по окружности
+        var phi = acos(1 - 2 * randf())  # Угол по вертикали
+        var x = radius * sin(phi) * cos(theta)
+        var y = radius * sin(phi) * sin(theta)
+        var z = radius * cos(phi)
+        points.append(Vector3(x, y, z))
+    return points
+
+Функция distribute_points_on_plane генерирует num_points точек, равномерно распределенных на сфере радиусом radius.
+Используются углы theta и phi для вычисления координат x, y, z.
+
+
+
+-------------------------------------
+
+Теперь перейдем к распределению точек в трехмерном пространстве. Для равномерного распределения точек можно использовать сферическую координатную систему. Вот пример кода:
+
+
+
+
+
+func distribute_points_in_3d(num_points: int, radius: float) -> Array:
+    var points = []
+    for i in range(num_points):
+        var theta = acos(1 - 2 * (i + 0.5) / num_points)  # Угол по вертикали
+        var phi = (sqrt(5) + 1) / 2 * i  # Угол по горизонтали
+        var x = radius * sin(theta) * cos(phi)
+        var y = radius * sin(theta) * sin(phi)
+        var z = radius * cos(theta)
+        points.append(Vector3(x, y, z))
+    return points
+
+
+
+Функция distribute_points_in_3d() генерирует num_points точек, равномерно распределенных по сфере радиусом radius.
+Используются углы theta и phi для вычисления координат x, y, z.

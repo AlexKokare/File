@@ -1,0 +1,203 @@
+extends "res://Save/save.gd"
+
+class_name BaseArrayManager
+
+const BaseFigure = preload("res://class_figyr/base_figyra.gd")
+const Bishop = preload("res://class_figyr/Bishop.gd")
+const King = preload("res://class_figyr/King.gd")
+const Knight = preload("res://class_figyr/Knight.gd")
+const Pawn = preload("res://class_figyr/Pawn.gd")
+const Queen = preload("res://class_figyr/Qween.gd")
+const Rook = preload("res://class_figyr/Rook.gd")
+
+# Счетчики для раундов и ходов
+var moves_per_round = 3
+var current_player = 1
+var moves_made = 0
+
+# Лог для хранения истории ходов и раундов
+var move_history = []
+var round_history = []
+
+# Карта соответствия классов фигур их индексам
+const FIGURE_CLASSES = {
+	"base": 0,
+	"king": 1,
+	"queen": 2,
+	"knight": 3,
+	"rook": 4,
+	"bishop": 5,
+	"pawn": 6
+}
+
+# Основной массив данных (одноразмерный массив, представляющий доску)
+var grid = []
+
+# Инициализация массива
+func initialize_grid(rows: int, columns: int):
+	grid.resize(rows * columns)
+	for i in range(grid.size()):
+		grid[i] = "0"  # Пустая ячейка
+	print("Массив инициализирован: ", grid)
+
+# Получение размеров массива
+func get_dimensions() -> Array:
+	var rows = 8  # Можно заменить на динамическое значение
+	var columns = 8  # Можно заменить на динамическое значение
+	var depth = 1  # Для плоского массива
+	return [rows, columns, depth]
+
+# Проверка индекса
+func validate_index(index: int, size: int) -> bool:
+	return index >= 0 and index < size
+
+# Преобразование индекса в координаты
+func from_index(index: int, dimensions: Array) -> Array:
+	var columns = dimensions[1]
+	return [index / columns, index % columns]
+
+# Преобразование координат в индекс
+func to_index(row: int, column: int, dimensions: Array) -> int:
+	var columns = dimensions[1]
+	return row * columns + column
+
+# Обновление ячейки массива
+func update_cell(index: int, value: String, rows: int, columns: int, player: int, depth: int):
+	if validate_index(index, grid.size()):
+		grid[index] = {
+			"value": value,
+			"player": player,
+			"depth": depth
+		}
+		print("Ячейка обновлена: ", index, grid[index])
+	else:
+		print("Ошибка: индекс за пределами массива.")
+
+# Проверка и обновление индексов
+func check_and_update_indices(current_index: int, new_index: int):
+	var dimensions = get_dimensions()
+	if not validate_index(current_index, grid.size()):
+		print("Ошибка: текущий индекс за пределами массива.")
+		return
+
+	if not validate_index(new_index, grid.size()):
+		print("Ошибка: новый индекс за пределами массива.")
+		return
+
+	print("Текущий индекс:", current_index, "=>", from_index(current_index, dimensions))
+	print("Новый индекс:", new_index, "=>", from_index(new_index, dimensions))
+
+# Перемещение фигуры с проверкой
+func move_piece(piece_type: String, current_index: int, new_index: int):
+	check_and_update_indices(current_index, new_index)
+
+	var dimensions = get_dimensions()
+	var rows = dimensions[0]
+	var columns = dimensions[1]
+
+	if new_index in get_possible_moves(piece_type, current_index, rows, columns):
+		# Обновляем информацию в текущем и новом индексе
+		update_cell(current_index, "0", rows, columns, -1, 1)
+		update_cell(new_index, str(FIGURE_CLASSES[piece_type]), rows, columns, current_player, 1)
+
+		# Сохраняем ход
+		log_move(piece_type, current_index, new_index)
+
+		moves_made += 1
+
+		# Проверка окончания раунда
+		if moves_made >= moves_per_round:
+			end_round()
+	else:
+		print("Ошибка: недопустимое перемещение.")
+
+# Логирование хода
+func log_move(piece_type: String, current_index: int, new_index: int):
+	var move_data = {
+		"piece_type": piece_type,
+		"current_index": current_index,
+		"new_index": new_index,
+		"player": current_player,
+		"round": get_current_round()
+	}
+	move_history.append(move_data)
+	print("Ход записан:", move_data)
+
+# Завершение раунда и запись в историю
+func end_round():
+	var round_data = {
+		"round_number": get_current_round(),
+		"player_moves": moves_made,
+		"game_state": grid.duplicate(true)
+	}
+	round_history.append(round_data)
+
+	# Сбрасываем счетчики
+	moves_made = 0
+	current_player = 3 - current_player
+
+	print("Раунд завершен:", round_data)
+
+# Получение текущего раунда
+func get_current_round() -> int:
+	return round_history.size() + 1
+
+# Откат к определенному ходу
+func undo_move(move_index: int):
+	if move_index < 0 or move_index >= move_history.size():
+		print("Ошибка: недопустимый индекс хода.")
+		return
+
+	var move_data = move_history[move_index]
+	update_cell(move_data["new_index"], "0", get_dimensions()[0], get_dimensions()[1], -1, 1)
+	update_cell(move_data["current_index"], str(FIGURE_CLASSES[move_data["piece_type"]]), get_dimensions()[0], get_dimensions()[1], move_data["player"], 1)
+	move_history.resize(move_index)  # Удаляем все ходы после отката
+	print("Откат выполнен к ходу:", move_data)
+
+# Откат к определенному раунду
+func undo_round(round_index: int):
+	if round_index < 0 or round_index >= round_history.size():
+		print("Ошибка: недопустимый индекс раунда.")
+		return
+
+	var round_data = round_history[round_index]
+	grid = round_data["game_state"]
+	round_history.resize(round_index)  # Удаляем все раунды после отката
+	print("Откат выполнен к раунду:", round_data)
+
+# Получение возможных ходов для любой фигуры
+func get_possible_moves(piece_type: String, position: int, rows: int, columns: int) -> Array:
+	match piece_type:
+		"king":
+			return King.new().get_moves(position, rows, columns)
+		"rook":
+			return Rook.new().get_moves(position, rows, columns)
+		"queen":
+			return Queen.new().get_moves(position, rows, columns)
+		"bishop":
+			return Bishop.new().get_moves(position, rows, columns)
+		"knight":
+			return Knight.new().get_moves(position, rows, columns)
+		"pawn":
+			return Pawn.new().get_moves(position, rows, columns)
+	return []
+
+# Инициализация фигуры в массиве
+func initialize_figure(piece_type: String, position: int, rows: int, columns: int):
+	if not validate_index(position, grid.size()):
+		print("Ошибка: недопустимый индекс для инициализации фигуры.")
+		return
+
+	update_cell(position, str(FIGURE_CLASSES[piece_type]), rows, columns, current_player, 1)
+	print("Фигура типа", piece_type, "добавлена на позицию", position)
+
+# Сохранение состояния
+func save_state():
+	var save_data = {
+		"grid": grid,
+		"rows": get_dimensions()[0],
+		"columns": get_dimensions()[1],
+		"move_history": move_history,
+		"round_history": round_history
+	}
+	save_game(save_data)

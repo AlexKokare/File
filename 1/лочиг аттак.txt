@@ -1,0 +1,138 @@
+extends Object
+
+class_name LogickAttack
+
+# Счетчики для ходов и раундов
+var moves_per_round = 3
+var current_player = 1
+var moves_made = 0
+var round_number = 1
+
+# Обработка события атаки/защиты
+func process_event(all_pieces: Array, involved_pieces: Array, rows: int):
+    if not validate_pieces(involved_pieces):
+        print("Ошибка: некорректные фигуры в involved_pieces.")
+        return
+
+    var attackers = involved_pieces.filter(func(piece): return piece.has("type") and piece["type"] == "attacker")
+    var defenders = involved_pieces.filter(func(piece): return piece.has("type") and piece["type"] == "defender")
+
+    reset_defender_states(defenders)
+
+    for attacker in attackers:
+        process_line_attack(attacker, all_pieces, rows)
+        for defender in defenders:
+            if attacker["index"] == defender["index"]:
+                process_attack_on_cell(attacker, defender, all_pieces)
+            elif distance_between_indexes(attacker["index"], defender["index"], rows) == 1:
+                process_adjacent_interaction(attacker, defender)
+
+    process_collisions(attackers, _process_attacker_vs_attacker)
+    process_collisions(defenders, _process_defender_vs_defender)
+
+    update_move_counters()
+
+# Обновление счетчиков ходов и раундов
+func update_move_counters():
+    moves_made += 1
+    if moves_made >= moves_per_round:
+        end_round()
+
+# Завершение раунда
+func end_round():
+    print("Раунд завершен. Игрок", current_player, "завершил раунд.")
+    moves_made = 0
+    current_player = 3 - current_player  # Переключение между игроками
+    round_number += 1
+
+# Валидация фигур
+func validate_pieces(pieces: Array) -> bool:
+    for piece in pieces:
+        if not piece.has("index"):
+            print("Некорректная фигура:", piece)
+            return false
+    return true
+
+# Сброс состояния защитников
+func reset_defender_states(defenders: Array):
+    for defender in defenders:
+        if defender.has("reset_state"):
+            defender.reset_state()
+
+# Обработка атаки на клетке
+func process_attack_on_cell(attacker: Dictionary, defender: Dictionary, all_pieces: Array):
+    print("Обработка атаки на клетке:", attacker["index"])
+
+# Обработка линейной атаки
+func process_line_attack(attacker: Dictionary, all_pieces: Array, rows: int):
+    print("Обработка линейной атаки:", attacker["index"])
+
+# Взаимодействие на соседних клетках
+func process_adjacent_interaction(attacker: Dictionary, defender: Dictionary):
+    print("Обработка взаимодействия на соседних клетках между:", attacker["index"], "и", defender["index"])
+
+# Расчет расстояния между индексами
+func distance_between_indexes(index1: int, index2: int, rows: int) -> int:
+    var row1 = index1 / rows
+    var col1 = index1 % rows
+    var row2 = index2 / rows
+    var col2 = index2 % rows
+    return abs(row1 - row2) + abs(col1 - col2)
+
+# Обработка столкновений
+func process_collisions(pieces: Array, collision_handler: Callable):
+    for i in range(pieces.size()):
+        for j in range(i + 1, pieces.size()):
+            collision_handler.call(pieces[i], pieces[j])
+
+# Обработка столкновения нападающих
+func _process_attacker_vs_attacker(attacker1: Dictionary, attacker2: Dictionary):
+    attacker1["health"] -= attacker2["attack"]
+    attacker2["health"] -= attacker1["attack"]
+    print("Атакеры нанесли урон друг другу.")
+    if attacker1["health"] <= 0:
+        print("Атакер 1 уничтожен.")
+    if attacker2["health"] <= 0:
+        print("Атакер 2 уничтожен.")
+
+# Обработка столкновения защитников
+func _process_defender_vs_defender(defender1: Dictionary, defender2: Dictionary):
+    if defender1["defense"] > defender2["defense"]:
+        defender2["health"] -= defender1["attack"]
+        print("Защитник 2 получил урон от Защитника 1.")
+    elif defender2["defense"] > defender1["defense"]:
+        defender1["health"] -= defender2["attack"]
+        print("Защитник 1 получил урон от Защитника 2.")
+    else:
+        print("Ничья. Защитники равны по силе.")
+
+# Сохранение позиций
+func save_positions(pieces: Array) -> Dictionary:
+    var positions = {}
+    for piece in pieces:
+        positions[piece] = piece["index"]
+    return positions
+
+# Восстановление позиций
+func restore_positions(positions: Dictionary):
+    for piece in positions.keys():
+        piece["index"] = positions[piece]
+
+# Атака по линии с учетом препятствий
+func process_line_attack(attacker: Dictionary, all_pieces: Array, rows: int):
+    var direction = attacker["attack_direction"]
+    var current_index = attacker["index"]
+    while true:
+        current_index += direction
+        if current_index < 0 or current_index >= rows * rows:
+            print("Атака вышла за границы поля.")
+            return
+        for piece in all_pieces:
+            if piece["index"] == current_index:
+                if piece["type"] == "defender":
+                    process_attack_on_cell(attacker, piece, all_pieces)
+                    return
+                else:
+                    print("Атака остановлена препятствием на индексе", current_index)
+                    return
+        print("Целей не найдено в направлении атаки.")

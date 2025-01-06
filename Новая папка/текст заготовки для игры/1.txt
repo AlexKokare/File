@@ -1,0 +1,70 @@
+extends Node
+
+var massive = []
+var current_position = Vector2(5, 5) # Начальная позиция в центре 10x10 массива
+
+# Инициализация массива 10x10
+func _ready():
+    for i in range(10):
+        massive.append([])
+        for j in range(10):
+            massive[i].append(i * 10 + j) # Заполнение массива значениями от 0 до 99
+
+# Функция для перемещения
+func move(direction: String):
+    match direction:
+        "up":
+            if current_position.y > 0:
+                current_position.y -= 1
+        "down":
+            if current_position.y < 9:
+                current_position.y += 1
+        "left":
+            if current_position.x > 0:
+                current_position.x -= 1
+        "right":
+            if current_position.x < 9:
+                current_position.x += 1
+        "up_right":
+            if current_position.x < 9 and current_position.y > 0:
+                current_position.x += 1
+                current_position.y -= 1
+        "up_left":
+            if current_position.x > 0 and current_position.y > 0:
+                current_position.x -= 1
+                current_position.y -= 1
+        "down_right":
+            if current_position.x < 9 and current_position.y < 9:
+                current_position.x += 1
+                current_position.y += 1
+        "down_left":
+            if current_position.x > 0 and current_position.y < 9:
+                current_position.x -= 1
+                current_position.y += 1
+        "stay":
+            # Оставаться на месте, ничего не делать
+            pass
+
+    # Вывод текущей позиции в массиве
+    print("Текущая позиция:", massive[int(current_position.y)][int(current_position.x)])
+
+# Пример вызова функции
+func _process(delta):
+    if Input.is_action_just_pressed("ui_up"):
+        move("up")
+    elif Input.is_action_just_pressed("ui_down"):
+        move("down")
+    elif Input.is_action_just_pressed("ui_left"):
+        move("left")
+    elif Input.is_action_just_pressed("ui_right"):
+        move("right")
+    elif Input.is_action_just_pressed("ui_up_right"):
+        move("up_right")
+    elif Input.is_action_just_pressed("ui_up_left"):
+        move("up_left")
+    elif Input.is_action_just_pressed("ui_down_right"):
+        move("down_right")
+    elif Input.is_action_just_pressed("ui_down_left"):
+        move("down_left")
+    elif Input.is_action_just_pressed("ui_stay"):
+        move("stay")

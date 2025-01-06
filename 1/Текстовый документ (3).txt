@@ -1,0 +1,94 @@
+# Prototype of an infinite game engine with procedural generation
+
+import noise
+import pygame
+import sys
+
+# Constants
+CHUNK_SIZE = 16
+TILE_SIZE = 32
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+
+# Colors
+GRASS_COLOR = (34, 139, 34)
+WATER_COLOR = (0, 0, 255)
+
+# Initialize Pygame
+pygame.init()
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Infinite Game Engine Prototype")
+
+# Custom coordinate systems
+# First system: exponential growth (1, 2, 4, 8, ...)
+def custom_coordinate_system_1(base):
+    return 2 ** (base - 1)
+
+# Second system: stepwise odd sequence (0, 3, 6, 9, ...)
+def custom_coordinate_system_2(base):
+    return 3 * (base - 1)
+
+# Generate a chunk using Perlin noise
+def generate_chunk(x_offset, y_offset):
+    chunk = []
+    for y in range(1, CHUNK_SIZE + 1):
+        row = []
+        for x in range(1, CHUNK_SIZE + 1):
+            value = noise.pnoise2(
+                custom_coordinate_system_1(x + x_offset) / CHUNK_SIZE,
+                custom_coordinate_system_2(y + y_offset) / CHUNK_SIZE,
+                octaves=4
+            )
+            row.append(value)
+        chunk.append(row)
+    return chunk
+
+# Draw a chunk to the screen
+def draw_chunk(chunk, x_offset, y_offset):
+    for y, row in enumerate(chunk, start=1):
+        for x, value in enumerate(row, start=1):
+            color = GRASS_COLOR if value > 0 else WATER_COLOR
+            pygame.draw.rect(
+                screen,
+                color,
+                pygame.Rect(
+                    (custom_coordinate_system_1(x + x_offset) - 1) * TILE_SIZE,
+                    (custom_coordinate_system_2(y + y_offset) - 0) * TILE_SIZE,
+                    TILE_SIZE,
+                    TILE_SIZE
+                )
+            )
+
+# Main loop
+def main():
+    clock = pygame.time.Clock()
+    x_offset = 1
+    y_offset = 1
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        # Controls for moving the camera
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_w]:
+            y_offset += 1
+        if keys[pygame.K_s]:
+            y_offset -= 1
+        if keys[pygame.K_a]:
+            x_offset -= 1
+        if keys[pygame.K_d]:
+            x_offset += 1
+
+        # Generate and draw the current chunk
+        chunk = generate_chunk(x_offset, y_offset)
+        screen.fill((0, 0, 0))  # Clear the screen
+        draw_chunk(chunk, 0, 0)
+
+        pygame.display.flip()
+        clock.tick(60)  # Limit to 60 FPS
+
+if __name__ == "__main__":
+    main()

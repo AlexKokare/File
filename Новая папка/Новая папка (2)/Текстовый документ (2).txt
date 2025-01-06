@@ -1,0 +1,119 @@
+# game_logic_with_menu.gd
+extends Node
+
+# Хардкодинг логики игры и меню в одном скрипте, с обновлением для 3D окружения
+
+# Меню
+var menu_items = ["Start Game", "Options", "Exit"]
+var selected_index = 0
+
+func _ready():
+    print("--- Initializing Game and Menu ---")
+    show_menu()
+
+# Показать меню
+func show_menu():
+    print("--- Main Menu ---")
+    for i in range(menu_items.size()):
+        if i == selected_index:
+            print("->", menu_items[i])
+        else:
+            print("  ", menu_items[i])
+
+# Обработка ввода для меню
+func _input(event):
+    if event is InputEventKey:
+        if event.pressed:
+            if event.scancode == KEY_UP:
+                selected_index = max(selected_index - 1, 0)
+                show_menu()
+            elif event.scancode == KEY_DOWN:
+                selected_index = min(selected_index + 1, menu_items.size() - 1)
+                show_menu()
+            elif event.scancode == KEY_ENTER:
+                handle_menu_selection()
+
+# Обработка выбора в меню
+func handle_menu_selection():
+    match menu_items[selected_index]:
+        "Start Game":
+            start_game()
+        "Options":
+            show_options()
+        "Exit":
+            get_tree().quit()
+
+# Начало игры
+func start_game():
+    print("--- Starting Game in 3D ---")
+
+    # Создаем игровое поле
+    var field = create_3d_field(5)
+
+    # Создаем атакующего
+    var attacker = create_3d_piece(Vector3(0, 0.5, 0), SphereMesh.new(), Color(1, 0, 0))
+    add_child(attacker)
+
+    # Создаем защитников
+    var defender1 = create_3d_piece(Vector3(0, 0.5, 1), CubeMesh.new(), Color(0, 1, 0))
+    add_child(defender1)
+
+    var defender2 = create_3d_piece(Vector3(0, 0.5, 2), CubeMesh.new(), Color(0, 1, 0))
+    add_child(defender2)
+
+    # Логика взаимодействия
+    process_event(attacker, defender1)
+    process_line_attack(attacker, [defender1, defender2], field)
+
+# Показать настройки
+func show_options():
+    print("--- Options Menu ---")
+    print("Feature coming soon!")
+
+# Создание 3D игрового поля
+func create_3d_field(size: int):
+    var field = []
+    for y in range(size):
+        for x in range(size):
+            var cell = MeshInstance.new()
+            cell.mesh = PlaneMesh.new()
+            cell.translation = Vector3(x, 0, y)
+            cell.material_override = SpatialMaterial.new()
+            cell.material_override.albedo_color = Color(1, 1, 1)  # Базовый цвет клетки
+            add_child(cell)
+            field.append(cell)
+    return field
+
+# Создание 3D фигуры
+func create_3d_piece(position: Vector3, mesh: Mesh, color: Color):
+    var piece = MeshInstance.new()
+    piece.mesh = mesh
+    piece.translation = position
+    piece.material_override = SpatialMaterial.new()
+    piece.material_override.albedo_color = color
+    return piece
+
+# Подсветка клетки в 3D
+func highlight_cell_3d(cell: MeshInstance):
+    var highlight_material = SpatialMaterial.new()
+    highlight_material.albedo_color = Color(1, 1, 0)  # Желтый цвет
+    cell.material_override = highlight_material
+    print("Highlighted cell at position:", cell.translation)
+
+# Обработка взаимодействия между атакующим и защитником
+func process_event(attacker, defender):
+    defender.health -= attacker.attack_power
+    if defender.health > 0:
+        attacker.health -= defender.defense_power
+
+# Обработка линейной атаки в 3D
+func process_line_attack(attacker, defenders, field):
+    for defender in defenders:
+        for cell in field:
+            if cell.translation == defender.translation:
+                defender.health -= attacker.attack_power
+                if defender.health <= 0:
+                    print("Defender defeated at position:", defender.translation)
+                    break
+                else:
+                    print("Defender survived at position:", defender.translation)
