@@ -1,0 +1,192 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rotating Cube with Attached Planes</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+    }
+    canvas {
+      border: 1px solid black;
+      position: relative;
+    }
+    .controls {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 10px;
+    }
+    label {
+      margin: 5px;
+    }
+    .link {
+      position: absolute;
+      text-decoration: underline;
+      cursor: pointer;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="cubeCanvas" width="500" height="500"></canvas>
+  <div class="controls">
+    <label>Speed:</label>
+    <input type="number" id="speedControl" min="0.1" max="5" step="0.1" value="1">
+    <br>
+    <label>Rotation Axis (X/Y/Z):</label>
+    <input type="text" id="axisControl" value="x" maxlength="1">
+  </div>
+
+  <script>
+    const canvas = document.getElementById('cubeCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let speed = parseFloat(document.getElementById('speedControl').value);
+    let axis = document.getElementById('axisControl').value;
+    
+    let cubePos = { x: 0, y: 0 };  // Начальная позиция куба на плоскости
+
+    // Вершины куба
+    const vertices = [
+      [-1, -1, -1], [ 1, -1, -1], [ 1,  1, -1], [-1,  1, -1], // Front
+      [-1, -1,  1], [ 1, -1,  1], [ 1,  1,  1], [-1,  1,  1]  // Back
+    ];
+
+    const edges = [
+      [0, 1], [1, 2], [2, 3], [3, 0], // Front
+      [4, 5], [5, 6], [6, 7], [7, 4], // Back
+      [0, 4], [1, 5], [2, 6], [3, 7]  // Sides
+    ];
+
+    let angleX = 0, angleY = 0, angleZ = 0;
+
+    // Массив плоскостей с уникальными ссылками и позициями
+    const planes = [
+      { id: 'link1', url: 'https://chatgpt.com/c/677cba5e-c7f8-8001-9e04-0b46739af24a', color: 'blue', position: [0, 0, 1] }, // Передняя плоскость
+      { id: 'link2', url: 'https://chatgpt.com/', color: 'green', position: [0, 0, -1] }, // Задняя плоскость
+      { id: 'link3', url: 'https://chatgpt.com/c/677cb7fd-b9f0-8001-b7ee-17541d25b239', color: 'purple', position: [1, 0, 0] }, // Правая плоскость
+      { id: 'link4', url: window.location.href, color: 'red', position: [-1, 0, 0] }, // Левая плоскость
+      { id: 'link5', url: 'https://example.com', color: 'yellow', position: [0, 1, 0] }, // Верхняя плоскость
+      { id: 'link6', url: 'https://example.com', color: 'orange', position: [0, -1, 0] }, // Нижняя плоскость
+    ];
+
+    // Функция для добавления всех плоскостей
+    function addPlanes() {
+      planes.forEach(plane => {
+        const linkElement = document.createElement('div');
+        linkElement.classList.add('link');
+        linkElement.id = plane.id;
+        linkElement.textContent = 'Перейти на сайт';
+        linkElement.style.color = plane.color;
+        linkElement.style.position = 'absolute';
+        linkElement.style.transform = 'translate(-50%, -50%)';
+        linkElement.style.cursor = 'pointer';
+        linkElement.onclick = () => window.location.href = plane.url;
+        document.body.appendChild(linkElement);
+      });
+    }
+
+    function rotate(vertices, axis, angle) {
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      return vertices.map(v => {
+        if (axis === 'x') {
+          return [v[0], cos * v[1] - sin * v[2], sin * v[1] + cos * v[2]];
+        }
+        if (axis === 'y') {
+          return [cos * v[0] + sin * v[2], v[1], -sin * v[0] + cos * v[2]];
+        }
+        if (axis === 'z') {
+          return [cos * v[0] - sin * v[1], sin * v[0] + cos * v[1], v[2]];
+        }
+      });
+    }
+
+    // Функция для обновления позиции плоскостей в пространстве
+    function updatePlanes() {
+      planes.forEach(plane => {
+        const rotatedPosition = rotate(plane.position, axis, angleX);
+        plane.position = rotatedPosition;
+      });
+    }
+
+    function drawCube() {
+      const rotatedVertices = rotate(vertices, axis, angleX);
+      const scale = 100;
+      const offsetX = canvas.width / 2 + cubePos.x;
+      const offsetY = canvas.height / 2 + cubePos.y;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.beginPath();
+      edges.forEach(([start, end]) => {
+        const [x1, y1] = rotatedVertices[start];
+        const [x2, y2] = rotatedVertices[end];
+        ctx.moveTo(x1 * scale + offsetX, y1 * scale + offsetY);
+        ctx.lineTo(x2 * scale + offsetX, y2 * scale + offsetY);
+      });
+
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // Функция для рисования плоскостей
+    function drawPlanes() {
+      planes.forEach(plane => {
+        const [x, y, z] = plane.position;
+        const rotatedPosition = rotate([plane.position], axis, angleX)[0];
+        const xPos = rotatedPosition[0] * 100 + canvas.width / 2;
+        const yPos = rotatedPosition[1] * 100 + canvas.height / 2;
+
+        const linkElement = document.getElementById(plane.id);
+        linkElement.style.left = `${xPos}px`;
+        linkElement.style.top = `${yPos}px`;
+      });
+    }
+
+    function update() {
+      drawCube();
+      updatePlanes();  // Обновляем позицию плоскостей
+      drawPlanes();    // Рисуем плоскости
+      angleX += speed * 0.01;
+      angleY += speed * 0.01;
+      angleZ += speed * 0.01;
+      requestAnimationFrame(update);
+    }
+
+    // Управление с клавишами
+    document.addEventListener('keydown', (e) => {
+      const moveAmount = 5;
+      if (e.key === 'ArrowUp') {
+        cubePos.y -= moveAmount; // Вверх
+      } else if (e.key === 'ArrowDown') {
+        cubePos.y += moveAmount; // Вниз
+      } else if (e.key === 'ArrowLeft') {
+        cubePos.x -= moveAmount; // Влево
+      } else if (e.key === 'ArrowRight') {
+        cubePos.x += moveAmount; // Вправо
+      }
+    });
+
+    document.getElementById('speedControl').addEventListener('input', (e) => {
+      speed = parseFloat(e.target.value);
+    });
+
+    document.getElementById('axisControl').addEventListener('input', (e) => {
+      axis = e.target.value.toLowerCase();
+    });
+
+    addPlanes();  // Добавление всех плоскостей
+    update();
+  </script>
+</body>
+</html>
