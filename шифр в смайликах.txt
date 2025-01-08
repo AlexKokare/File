@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Шифрованное Сообщение</title>
+</head>
+<body>
+    <h1>🔐📜 Защищённое Сообщение</h1>
+    <p>Сообщение зашифровано с помощью эмодзи для защиты информации.</p>
+    <p>🌍💬👍🔐😊</p>
+</body>
+</html>
