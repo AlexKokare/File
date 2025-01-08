@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://ckyojf20orann"]
+
+[ext_resource type="Script" path="res://level traning room/scene.gd" id="1_kkwfm"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_buh0p"]
+
+[node name="scene" type="Node3D"]
+script = ExtResource("1_kkwfm")
+
+[node name="pol" type="MeshInstance3D" parent="."]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 0, 0, 0)
+mesh = SubResource("PlaneMesh_buh0p")

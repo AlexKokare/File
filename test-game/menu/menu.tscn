@@ -1,0 +1,115 @@
+[gd_scene load_steps=2 format=3 uid="uid://b658fng4j11jc"]
+
+[ext_resource type="Script" path="res://menu/menu.gd" id="1_byl5t"]
+
+[node name="menu" type="Node2D"]
+script = ExtResource("1_byl5t")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Panel" type="Panel" parent="CanvasLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Panel"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 18.0
+offset_bottom = 45.0
+grow_horizontal = 2
+text = "тестовая игра"
+horizontal_alignment = 1
+
+[node name="Button" type="Button" parent="CanvasLayer/Panel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -76.0
+offset_top = -242.0
+offset_right = 77.0
+offset_bottom = -167.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 23
+text = "начать игру"
+
+[node name="Button2" type="Button" parent="CanvasLayer/Panel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -425.0
+offset_top = -126.0
+offset_right = -254.0
+offset_bottom = -29.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "node"
+
+[node name="Button3" type="Button" parent="CanvasLayer/Panel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -191.0
+offset_top = -118.0
+offset_right = -35.0
+offset_bottom = -31.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "move"
+
+[node name="Button4" type="Button" parent="CanvasLayer/Panel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 67.0
+offset_top = -126.0
+offset_right = 211.0
+offset_bottom = -34.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "massive_cell
+"
+
+[node name="Label2" type="Label" parent="CanvasLayer/Panel"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -429.0
+offset_top = 26.0
+offset_right = -51.0
+offset_bottom = 242.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "print"
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 3.0
+
+[node name="Timer_frezze" type="Timer" parent="."]
+wait_time = 15.0
+
+[connection signal="pressed" from="CanvasLayer/Panel/Button" to="." method="_on_start_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/Panel/Button2" to="." method="_on_button_test_pressed"]
+[connection signal="pressed" from="CanvasLayer/Panel/Button3" to="." method="_on_test"]
+[connection signal="pressed" from="CanvasLayer/Panel/Button4" to="." method="_button_massive_test"]
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]
+[connection signal="timeout" from="Timer_frezze" to="." method="_on_timer_frezze_timeout"]
