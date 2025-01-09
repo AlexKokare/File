@@ -1,0 +1,14 @@
+{
+    "servers": [
+        {
+            "name": "Server1",
+            "address": "http://localhost:5000",
+            "endpoints": ["/status", "/data"]
+        },
+        {
+            "name": "Server2",
+            "address": "http://localhost:6000",
+            "endpoints": ["/health", "/info"]
+        }
+    ]
+}
