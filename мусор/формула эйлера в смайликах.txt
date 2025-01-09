@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Зашифрованная Формула Эйлера</title>
+</head>
+<body>
+  <p>🌐<sup>💭🔵</sup> + 1 = 0</p>
+</body>
+</html>

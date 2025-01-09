@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ссылка на YouTube</title>
+</head>
+<body>
+    <h1>Перейдите на YouTube</h1>
+    <a href="https://www.youtube.com" target="_blank">Открыть YouTube</a>
+</body>
+</html>

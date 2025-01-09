@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Загрузка файла</title>
+    <style>
+        .drop-zone {
+            border: 2px dashed #4CAF50;
+            padding: 20px;
+            width: 300px;
+            margin: 20px auto;
+            text-align: center;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .drop-zone.dragover {
+            background-color: #f0f0f0;
+        }
+        #file-info {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="drop-zone" id="drop-zone">
+        Перетащите файл сюда
+    </div>
+    <div id="file-info"></div>
+    <button id="send-btn" disabled>Отправить</button>
+
+    <script>
+        const dropZone = document.getElementById("drop-zone");
+        const sendBtn = document.getElementById("send-btn");
+        const fileInfo = document.getElementById("file-info");
+        let fileToSend = null;
+
+        dropZone.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            dropZone.classList.add("dragover");
+        });
+
+        dropZone.addEventListener("dragleave", () => {
+            dropZone.classList.remove("dragover");
+        });
+
+        dropZone.addEventListener("drop", (e) => {
+            e.preventDefault();
+            dropZone.classList.remove("dragover");
+
+            fileToSend = e.dataTransfer.files[0];
+            if (fileToSend) {
+                fileInfo.textContent = `Выбран файл: ${fileToSend.name}`;
+                sendBtn.disabled = false;
+            } else {
+                fileInfo.textContent = "Файл не выбран.";
+                sendBtn.disabled = true;
+            }
+        });
+
+        sendBtn.addEventListener("click", () => {
+            if (fileToSend) {
+                const formData = new FormData();
+                formData.append("file", fileToSend);
+
+                fetch("http://localhost:3000/upload", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => alert(data.message))
+                .catch(error => alert("Ошибка отправки файла"));
+            }
+        });
+    </script>
+</body>
+</html>
